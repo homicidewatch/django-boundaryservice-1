@@ -76,7 +76,7 @@ class JSONField(models.TextField):
         """
         value = self._get_val_from_obj(obj)
 
-        return self.get_db_prep_value(value)
+        return self.get_prep_value(value)
 
 try:
     from south.modelsinspector import add_introspection_rules
