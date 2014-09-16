@@ -1,6 +1,7 @@
-from django.conf.urls.defaults import url
+import json
+
+from django.conf.urls import url
 from django.contrib.gis.db.models import GeometryField
-from django.utils import simplejson
 
 from tastypie.bundle import Bundle
 from tastypie.fields import ApiField, CharField
@@ -60,14 +61,14 @@ class GeometryApiField(ApiField):
 
         # Get ready-made geojson serialization and then convert it _back_ to a Python object
         # so that Tastypie can serialize it as part of the bundle
-        return simplejson.loads(value.geojson)
+        return json.loads(value.geojson)
 
 
 class SluggedResource(ModelResource):
     """
     ModelResource subclass that handles looking up models by slugs rather than IDs.
     """
-    def override_urls(self):
+    def prepend_urls(self):
         """
         Add slug-based url pattern.
         """
@@ -76,10 +77,16 @@ class SluggedResource(ModelResource):
             url(r"^(?P<resource_name>%s)/(?P<slug>[\w\d_.-]+)/$" % self._meta.resource_name, self.wrap_view('dispatch_detail'), name="api_dispatch_detail"),
             ]
 
-    def get_resource_uri(self, bundle_or_obj):
+    def get_resource_uri(self, bundle_or_obj=None):
         """
         Override URI generation to use slugs.
         """
+        # If there's no bundle_or_obj, something newer
+        # versions of tastypie will try, just go with
+        # the default method.
+        if not bundle_or_obj:
+            return super(ModelResource, self).get_resource_uri(bundle_or_obj)
+        
         kwargs = {
             'resource_name': self._meta.resource_name,
         }
